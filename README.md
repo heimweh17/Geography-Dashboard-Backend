@@ -14,8 +14,9 @@ The backend handles authentication, dataset ingestion, geospatial analytics, and
 - PostgreSQL + SQLAlchemy ORM  
 - Deterministic geospatial analysis (density, clustering, aggregation)  
 - AI-powered analytical insights with strict per-user rate limits  
-- Dockerized deployment on Railway  
-- Lightweight CI pipeline (GitHub Actions)
+- Docker-ready core and optional AI service entrypoints with health and readiness probes
+- GitHub Actions validation for linting, tests, and container builds
+- Prometheus-compatible API metrics and request-correlated structured logs
 
 ---
 
@@ -41,6 +42,11 @@ This separation enables scalability, fault isolation, and responsible AI usage.
 - Docker
 - Google Gemini (AI insights)
 - GitHub Actions (CI)
+- Prometheus-compatible metrics
+
+## Deployment notes
+
+The public core API is deployed separately from the Vercel frontend and uses Neon PostgreSQL. The optional AI service was previously deployed on AWS and is currently paused for cost control. Local Kubernetes manifests, Prometheus/Grafana resources, and Terraform registry bootstrap configuration are maintained in the main [GeoDashboard repository](https://github.com/heimweh17/Geo-Dashboard/tree/main/infra).
 
 ---
 

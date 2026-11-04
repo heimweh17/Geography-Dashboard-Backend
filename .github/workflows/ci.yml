@@ -22,8 +22,7 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install ruff
+          pip install -r requirements-dev.txt
 
       # 1) Lint（快、够用）
       - name: Ruff check
@@ -37,6 +36,13 @@ jobs:
           ENVIRONMENT: "test"
         run: |
           python -c "import app.main; print('import ok')"
+
+      - name: API health tests
+        env:
+          DATABASE_URL: "sqlite:///./ci-test.db"
+          SECRET_KEY: "ci-secret"
+          ENVIRONMENT: "test"
+        run: pytest -q
 
       # 3) Optional: Docker build（如果你 repo 有 Dockerfile）
       - name: Docker build

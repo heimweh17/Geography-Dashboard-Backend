@@ -6,18 +6,25 @@ RUN apt-get update \
     && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
 WORKDIR /app
 
-# Install dependencies
-COPY requirements.txt .
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8000 \
+    APP_MODULE=app.main:app
+
+RUN addgroup --system app && adduser --system --ingroup app app
+
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+COPY alembic.ini ./
+COPY alembic ./alembic
 COPY app ./app
+RUN chown -R app:app /app
 
-# Ensure logs are flushed
-ENV PYTHONUNBUFFERED=1
+USER app
+EXPOSE 8000
 
-# Start the API with Render's assigned port (or 10000 locally).
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}"]
+# APP_MODULE can be overridden with app.ai_main:app for the AI service.
+CMD ["sh", "-c", "uvicorn ${APP_MODULE} --host 0.0.0.0 --port ${PORT}"]

@@ -2,7 +2,6 @@
 Gemini AI service for generating insights from analysis results.
 """
 import json
-import os
 import re
 from typing import Any, Dict
 
@@ -221,7 +220,7 @@ def generate_insight(analysis_result: Dict[str, Any], context: Dict[str, Any] | 
 	result = None
 	try:
 		result = json.loads(json_text)
-	except json.JSONDecodeError as e:
+	except json.JSONDecodeError:
 		# If JSON parsing fails, try to manually extract fields
 		# This handles cases where JSON might be incomplete or malformed
 		
@@ -324,7 +323,6 @@ def _build_prompt(analysis_result: Dict[str, Any], context: Dict[str, Any] | Non
 	
 	summary = analysis_result.get("summary", {})
 	clustering = analysis_result.get("clustering", {})
-	grid = analysis_result.get("grid_density", {})
 	
 	# Extract key metrics
 	total_points = summary.get("total_points", 0)

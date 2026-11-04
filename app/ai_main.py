@@ -1,14 +1,15 @@
-import app
-from fastapi import FastAPI, Depends, HTTPException
+import logging
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.db.database import get_db
-from app.routers.auth import get_current_user
-from app.db.models import User
 from app.routers.ai import router as ai_router
 from app.core.request_id import RequestIdMiddleware
+from app.core.logging import configure_logging
+from app.core.metrics import MetricsMiddleware, metrics_response
+from app.db.database import check_database_connection
+
+log = logging.getLogger("ai_service")
 
 
 # ------------------------
@@ -16,6 +17,7 @@ from app.core.request_id import RequestIdMiddleware
 # ------------------------
 
 def create_ai_app() -> FastAPI:
+    configure_logging("geo-dashboard-ai", settings.log_level)
     app = FastAPI(
         title="Geo Dashboard AI Service",
         description="Dedicated microservice for AI-powered geospatial insights",
@@ -23,6 +25,7 @@ def create_ai_app() -> FastAPI:
     )
     
     app.add_middleware(RequestIdMiddleware)
+    app.add_middleware(MetricsMiddleware, service_name="geo-dashboard-ai")
     # CORS (same frontend as main backend)
     app.add_middleware(
         CORSMiddleware,
@@ -40,12 +43,27 @@ def create_ai_app() -> FastAPI:
     )
     
     @app.get("/health")
+    @app.get("/healthz", include_in_schema=False)
     def health_check():
         return {
             "status": "ok",
             "service": "ai",
-            "model": settings.gemini_model,
         }
+
+    @app.get("/readyz", include_in_schema=False)
+    def readyz():
+        if not settings.gemini_api_key:
+            raise HTTPException(status_code=503, detail="Gemini API key is not configured")
+        try:
+            check_database_connection()
+        except Exception:
+            log.exception("Readiness check failed")
+            raise HTTPException(status_code=503, detail="Database unavailable")
+        return {"status": "ready", "service": "ai"}
+
+    @app.get("/metrics", include_in_schema=False)
+    def metrics():
+        return metrics_response()
 
     return app
 

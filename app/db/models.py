@@ -1,7 +1,6 @@
 from datetime import datetime
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, Float, JSON
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, Float, JSON
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
 from app.db.database import Base

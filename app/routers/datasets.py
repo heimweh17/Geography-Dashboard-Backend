@@ -2,7 +2,6 @@ from __future__ import annotations
 import json
 import os
 import secrets
-from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
@@ -11,7 +10,7 @@ from app.core.config import settings
 from app.db.database import get_db
 from app.db.models import Dataset, User
 from app.routers.auth import get_current_user
-from app.schemas.datasets import DatasetList, DatasetOut, UploadResponse
+from app.schemas.datasets import DatasetList, UploadResponse
 from app.services.parsing import compute_bbox, parse_csv_points, parse_geojson_points
 
 

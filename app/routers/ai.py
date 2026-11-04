@@ -3,7 +3,6 @@ AI insights router with weekly limit enforcement.
 """
 import json
 from datetime import datetime, timedelta
-from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func

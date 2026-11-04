@@ -1,5 +1,5 @@
 from typing import Generator
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from sqlalchemy.pool import NullPool
 
@@ -37,3 +37,9 @@ def get_db() -> Generator[Session, None, None]:
         yield db
     finally:
         db.close()
+
+
+def check_database_connection() -> None:
+    """Raise when the configured database cannot serve a basic query."""
+    with engine.connect() as connection:
+        connection.execute(text("SELECT 1"))
