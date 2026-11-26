@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 	upload_dir: str = Field(default=os.getenv("UPLOAD_DIR", "storage/uploads"))
 	cors_origins: str = Field(default=os.getenv("CORS_ORIGINS", "http://localhost:5173,https://thegeodashboard.vercel.app,https://geo-dashboard-alex-lius-projects-ca62d274.vercel.app"))
 	navigator_toolkit_api_key: str | None = Field(default=os.getenv("NAVIGATOR_TOOLKIT_API_KEY"))
-	navigator_model: str = Field(default=os.getenv("NAVIGATOR_MODEL", "llama-3.3-70b-instruct"))
+	navigator_model: str = Field(default=os.getenv("NAVIGATOR_MODEL", "granite-3.3-8b-instruct"))
 	ai_max_output_tokens: int = Field(default=int(os.getenv("AI_MAX_OUTPUT_TOKENS", "600")))
 	ai_mode: Literal["embedded", "remote"] = "embedded"
 	ai_service_url: str | None = Field(default=os.getenv("AI_SERVICE_URL"))

@@ -2,6 +2,9 @@
 AI insights router with weekly limit enforcement.
 """
 import json
+import logging
+
+import requests
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -122,7 +125,14 @@ def generate_ai_insight(
 	# Generate insight
 	try:
 		insight = generate_insight(analysis_result, request.context)
-	except Exception:
+	except requests.Timeout:
+		raise HTTPException(status_code=504, detail="UF NaviGator timed out. Please retry. Your weekly insight is still available.")
+	except requests.HTTPError as exc:
+		code = exc.response.status_code if exc.response is not None else None
+		logging.getLogger(__name__).warning("NaviGator returned HTTP %s", code)
+		raise HTTPException(status_code=502, detail="UF NaviGator declined the request. Your weekly insight is still available.")
+	except Exception as exc:
+		logging.getLogger(__name__).warning("NaviGator summary failed (%s)", type(exc).__name__)
 		raise HTTPException(status_code=502, detail="UF NaviGator could not complete this summary. Try again later.")
 
 	# Record usage
