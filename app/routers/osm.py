@@ -79,7 +79,9 @@ def fetch_amenities(payload: AmenitiesRequest) -> dict[str, Any]:
     }
     filters = [special[name] for name in payload.amenities if name in special]
     standard = sorted(set(payload.amenities) - special.keys())
-    if standard:
+    if len(standard) == 1:
+        filters.append(f'["amenity"="{standard[0]}"]')
+    elif standard:
         filters.append(f'["amenity"~"^({"|".join(standard)})$"]')
     if payload.polygon:
         if len(payload.polygon) < 3:
@@ -89,17 +91,17 @@ def fetch_amenities(payload: AmenitiesRequest) -> dict[str, Any]:
         area = f"(around:{payload.radius},{payload.lat},{payload.lon})"
 
     clauses = "".join(f"nwr{tag_filter}{area};" for tag_filter in filters)
-    overpass_query = f"[out:json][timeout:25];({clauses});out center;"
+    selection = clauses if len(filters) == 1 else f"({clauses});"
+    overpass_query = f"[out:json][timeout:12];{selection}out center;"
 
     failures = []
     for endpoint in OVERPASS_ENDPOINTS:
         try:
-            response = requests.get(
-                endpoint,
-                params={"data": overpass_query},
-                headers=REQUEST_HEADERS,
-                timeout=15,
-            )
+            payload_data = {"data": overpass_query}
+            if len(overpass_query) > 1500:
+                response = requests.post(endpoint, data=payload_data, headers=REQUEST_HEADERS, timeout=15)
+            else:
+                response = requests.get(endpoint, params=payload_data, headers=REQUEST_HEADERS, timeout=15)
             response.raise_for_status()
             result = response.json()
             if "remark" in result or not isinstance(result.get("elements"), list):
