@@ -111,4 +111,8 @@ def fetch_amenities(payload: AmenitiesRequest) -> dict[str, Any]:
             failures.append(f"{endpoint}: {exc}")
 
     log.warning("All Overpass endpoints failed: %s", "; ".join(failures))
-    raise HTTPException(status_code=502, detail="Map data service is temporarily unavailable")
+    # Some public Overpass instances reject datacenter traffic but accept browser requests.
+    raise HTTPException(status_code=502, detail={
+        "message": "Map data service is temporarily unavailable",
+        "overpass_query": overpass_query,
+    })
