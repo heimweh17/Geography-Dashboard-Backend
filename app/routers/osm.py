@@ -10,8 +10,8 @@ log = logging.getLogger("osm_proxy")
 
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 OVERPASS_ENDPOINTS = (
-    "https://lz4.overpass-api.de/api/interpreter",
     "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+    "https://lz4.overpass-api.de/api/interpreter",
     "https://overpass.private.coffee/api/interpreter",
 )
 REQUEST_HEADERS = {
@@ -34,8 +34,8 @@ class PolygonPoint(BaseModel):
 class AmenitiesRequest(BaseModel):
     lat: float = Field(ge=-90, le=90)
     lon: float = Field(ge=-180, le=180)
-    amenities: list[str] = Field(min_length=1, max_length=20)
-    radius: int = Field(ge=100, le=10_000)
+    amenities: list[str] = Field(min_length=1, max_length=len(ALLOWED_AMENITIES))
+    radius: int = Field(ge=100, le=20_000)
     polygon: list[PolygonPoint] | None = Field(default=None, max_length=100)
 
 
@@ -73,7 +73,14 @@ def fetch_amenities(payload: AmenitiesRequest) -> dict[str, Any]:
     if invalid_amenities:
         raise HTTPException(status_code=400, detail="Unsupported amenity category")
 
-    amenity_filter = "|".join(payload.amenities)
+    special = {
+        "shop": '["shop"]', "mall": '["shop"="mall"]', "supermarket": '["shop"="supermarket"]',
+        "hotel": '["tourism"="hotel"]', "gym": '["leisure"="fitness_centre"]',
+    }
+    filters = [special[name] for name in payload.amenities if name in special]
+    standard = sorted(set(payload.amenities) - special.keys())
+    if standard:
+        filters.append(f'["amenity"~"^({"|".join(standard)})$"]')
     if payload.polygon:
         if len(payload.polygon) < 3:
             raise HTTPException(status_code=400, detail="A search polygon needs at least three points")
@@ -81,28 +88,23 @@ def fetch_amenities(payload: AmenitiesRequest) -> dict[str, Any]:
     else:
         area = f"(around:{payload.radius},{payload.lat},{payload.lon})"
 
-    overpass_query = f"""
-        [out:json][timeout:25];
-        (
-          node[\"amenity\"~\"{amenity_filter}\"]{area};
-          way[\"amenity\"~\"{amenity_filter}\"]{area};
-          relation[\"amenity\"~\"{amenity_filter}\"]{area};
-        );
-        out center;
-    """
+    clauses = "".join(f"nwr{tag_filter}{area};" for tag_filter in filters)
+    overpass_query = f"[out:json][timeout:25];({clauses});out center;"
 
     failures = []
     for endpoint in OVERPASS_ENDPOINTS:
         try:
-            response = requests.post(
+            response = requests.get(
                 endpoint,
-                data={"data": overpass_query},
+                params={"data": overpass_query},
                 headers=REQUEST_HEADERS,
                 timeout=15,
             )
             response.raise_for_status()
             result = response.json()
-            return {"elements": result.get("elements", [])}
+            if "remark" in result or not isinstance(result.get("elements"), list):
+                raise ValueError("Incomplete Overpass response")
+            return {"elements": result["elements"]}
         except (requests.RequestException, ValueError) as exc:
             failures.append(f"{endpoint}: {exc}")
 

@@ -13,7 +13,7 @@ from app.core.logging import configure_logging
 from app.core.metrics import MetricsMiddleware, metrics_response
 # Import models to ensure they're registered with Base.metadata
 from app.db import models  # noqa: F401
-from app.routers import ai_proxy
+from app.routers import ai, ai_proxy
 
 log = logging.getLogger("core_api")
 
@@ -44,8 +44,8 @@ def create_app() -> FastAPI:
 	app.include_router(analysis.router, prefix="/analysis", tags=["analysis"])
 	app.include_router(places.router, prefix="/places", tags=["places"])
 	app.include_router(osm.router, prefix="/osm", tags=["osm"])
-	#app.include_router(ai.router, prefix="/ai", tags=["ai"])
-	app.include_router(ai_proxy.router, prefix="/ai", tags=["ai"])
+	insights = ai_proxy if settings.ai_mode == "remote" else ai
+	app.include_router(insights.router, prefix="/ai", tags=["ai"])
 
 	@app.get("/healthz", include_in_schema=False)
 	def healthz():

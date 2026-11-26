@@ -70,6 +70,11 @@ def generate_ai_insight(
 	
 	Enforces weekly limit: max 1 insight per user per rolling 7 days.
 	"""
+	if not settings.gemini_api_key:
+		raise HTTPException(status_code=503, detail="AI summaries are not configured. Your analysis results are available.")
+
+	# Serialize concurrent requests for the same user on PostgreSQL.
+	db.query(User.id).filter(User.id == current_user.id).with_for_update().one()
 	# Check weekly limit
 	is_allowed, retry_after = check_weekly_limit(current_user.id, db)
 	
@@ -117,13 +122,9 @@ def generate_ai_insight(
 	# Generate insight
 	try:
 		insight = generate_insight(analysis_result, request.context)
-	except ValueError as e:
-		raise HTTPException(status_code=500, detail=f"AI service configuration error: {str(e)}")
-	except RuntimeError as e:
-		raise HTTPException(status_code=500, detail=f"AI service error: {str(e)}")
-	except Exception as e:
-		raise HTTPException(status_code=500, detail=f"Failed to generate insight: {str(e)}")
-	
+	except Exception:
+		raise HTTPException(status_code=502, detail="Gemini could not complete this summary. Try again later.")
+
 	# Record usage
 	usage = AIUsage(user_id=current_user.id, action="insight")
 	db.add(usage)
