@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 from app.core.config import settings
 from app.main import create_app
-from app.services import ai_gemini
+from app.services import ai_navigator
 
 
 def test_embedded_insight_auth_failure_recovery_and_quota(monkeypatch):
@@ -20,15 +20,15 @@ def test_embedded_insight_auth_failure_recovery_and_quota(monkeypatch):
     def submit():
         return client.post("/ai/insights", json=payload, headers=headers)
 
-    monkeypatch.setattr(settings, "gemini_api_key", None)
+    monkeypatch.setattr(settings, "navigator_toolkit_api_key", None)
     assert submit().status_code == 503
-    monkeypatch.setattr(settings, "gemini_api_key", "test-only")
+    monkeypatch.setattr(settings, "navigator_toolkit_api_key", "test-only")
     provider = Mock()
-    monkeypatch.setattr(ai_gemini.requests, "post", provider)
-    provider.return_value.json.return_value = {"candidates": []}
+    monkeypatch.setattr(ai_navigator.requests, "post", provider)
+    provider.return_value.json.return_value = {"choices": []}
     assert submit().status_code == 502
     narrative = {"text": "The dataset contains three points.", "method": "Point count", "highlights": ["3 points"]}
-    provider.return_value.json.return_value = {"candidates": [{"content": {"parts": [{"text": json.dumps(narrative)}]}}]}
+    provider.return_value.json.return_value = {"choices": [{"message": {"content": json.dumps(narrative)}}]}
     assert submit().json()["text"] == narrative["text"]
     assert submit().status_code == 429
     assert provider.call_count == 2

@@ -13,7 +13,7 @@ from app.db.database import get_db
 from app.db.models import AIUsage, AnalysisRun, User
 from app.routers.auth import get_current_user
 from app.schemas.ai import InsightRequest, InsightResponse
-from app.services.ai_gemini import generate_insight
+from app.services.ai_navigator import generate_insight
 
 router = APIRouter()
 
@@ -70,7 +70,7 @@ def generate_ai_insight(
 	
 	Enforces weekly limit: max 1 insight per user per rolling 7 days.
 	"""
-	if not settings.gemini_api_key:
+	if not settings.navigator_toolkit_api_key:
 		raise HTTPException(status_code=503, detail="AI summaries are not configured. Your analysis results are available.")
 
 	# Serialize concurrent requests for the same user on PostgreSQL.
@@ -123,7 +123,7 @@ def generate_ai_insight(
 	try:
 		insight = generate_insight(analysis_result, request.context)
 	except Exception:
-		raise HTTPException(status_code=502, detail="Gemini could not complete this summary. Try again later.")
+		raise HTTPException(status_code=502, detail="UF NaviGator could not complete this summary. Try again later.")
 
 	# Record usage
 	usage = AIUsage(user_id=current_user.id, action="insight")
@@ -132,11 +132,11 @@ def generate_ai_insight(
 	
 	# Return response
 	meta = {
-		"model": settings.gemini_model,
+		"model": settings.navigator_model,
 		"generated_at": datetime.utcnow().isoformat(),
 		"limit_window_days": 7,
 	}
-	# Include method if available from Gemini
+	# Include method if available from UF NaviGator
 	if "method" in insight:
 		meta["method"] = insight["method"]
 	

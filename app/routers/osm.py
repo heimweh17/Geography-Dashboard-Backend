@@ -5,6 +5,8 @@ import requests
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from app.services.cities import lookup_city
+
 router = APIRouter()
 log = logging.getLogger("osm_proxy")
 
@@ -41,7 +43,10 @@ class AmenitiesRequest(BaseModel):
 
 @router.get("/cities")
 def search_city(query: str = Query(min_length=2, max_length=200)) -> dict[str, Any] | None:
-    """Resolve one city through Nominatim without browser CORS restrictions."""
+    """Resolve known cities locally, with Nominatim for other place names."""
+    city = lookup_city(query.strip())
+    if city:
+        return city
     try:
         response = requests.get(
             NOMINATIM_URL,

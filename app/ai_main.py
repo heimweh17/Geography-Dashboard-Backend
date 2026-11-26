@@ -52,8 +52,8 @@ def create_ai_app() -> FastAPI:
 
     @app.get("/readyz", include_in_schema=False)
     def readyz():
-        if not settings.gemini_api_key:
-            raise HTTPException(status_code=503, detail="Gemini API key is not configured")
+        if not settings.navigator_toolkit_api_key:
+            raise HTTPException(status_code=503, detail="UF NaviGator API key is not configured")
         try:
             check_database_connection()
         except Exception:

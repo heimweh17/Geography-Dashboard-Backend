@@ -1,7 +1,6 @@
 """Generate a structured interpretation of a completed spatial analysis."""
 import json
 from typing import Any, Dict
-from urllib.parse import quote
 
 import requests
 from pydantic import BaseModel, Field
@@ -16,37 +15,25 @@ class Narrative(BaseModel):
 
 
 def generate_insight(analysis_result: dict, context: dict | None = None) -> dict:
-    model = quote(settings.gemini_model.removeprefix("models/"), safe="")
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
     response = requests.post(
-        url,
-        headers={"x-goog-api-key": settings.gemini_api_key},
+        "https://api.navigator.ai.ufl.edu/v1/chat/completions",
+        headers={"Authorization": f"Bearer {settings.navigator_toolkit_api_key}"},
         json={
-            "contents": [{"parts": [{"text": _build_prompt(analysis_result, context)}]}],
-            "generationConfig": {
-                "responseMimeType": "application/json",
-                "responseSchema": {
-                    "type": "OBJECT",
-                    "properties": {
-                        "text": {"type": "STRING"},
-                        "highlights": {"type": "ARRAY", "items": {"type": "STRING"}},
-                        "method": {"type": "STRING"},
-                    },
-                    "required": ["text", "highlights", "method"],
-                },
-                "maxOutputTokens": settings.ai_max_output_tokens,
-            },
+            "model": settings.navigator_model,
+            "messages": [{"role": "user", "content": _build_prompt(analysis_result, context)}],
+            "response_format": {"type": "json_object"},
+            "max_tokens": settings.ai_max_output_tokens,
         },
         timeout=(5, 45),
+        allow_redirects=False,
     )
     response.raise_for_status()
-    parts = response.json()["candidates"][0]["content"]["parts"]
-    output = "".join(part.get("text", "") for part in parts if not part.get("thought"))
+    output = response.json()["choices"][0]["message"]["content"]
     return Narrative.model_validate_json(output).model_dump()
 
 
 def _build_prompt(analysis_result: Dict[str, Any], context: Dict[str, Any] | None = None) -> str:
-	"""Build the prompt for Gemini."""
+	"""Build the prompt for NaviGator."""
 	
 	summary = analysis_result.get("summary", {})
 	clustering = analysis_result.get("clustering", {})

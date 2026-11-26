@@ -16,8 +16,11 @@ router = APIRouter()
 
 
 def _load_points_for_dataset(dataset: Dataset) -> list[dict]:
-	with open(dataset.storage_path, "rb") as f:
-		content = f.read()
+	try:
+		with open(dataset.storage_path, "rb") as f:
+			content = f.read()
+	except FileNotFoundError:
+		raise HTTPException(status_code=410, detail="The uploaded file has expired. Upload the dataset again to run a new analysis.")
 	if dataset.file_type == "csv":
 		return parse_csv_points(content)
 	else:
