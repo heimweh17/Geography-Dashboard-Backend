@@ -23,7 +23,7 @@ def create_app() -> FastAPI:
 	"""
 	configure_logging(settings.service_name, settings.log_level)
 	app = FastAPI(
-		title="Geo Analytics Backend",
+		title="Geography Dashboard API",
 		version="0.1.0",
 		description="Backend API for a geospatial analytics platform."
 	)

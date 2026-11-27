@@ -19,7 +19,7 @@ log = logging.getLogger("ai_service")
 def create_ai_app() -> FastAPI:
     configure_logging("geo-dashboard-ai", settings.log_level)
     app = FastAPI(
-        title="Geo Dashboard AI Service",
+        title="Geography Dashboard AI Service",
         description="Dedicated microservice for AI-powered geospatial insights",
         version="0.1.0",
     )

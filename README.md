@@ -1,8 +1,8 @@
-# GeoDashboard Backend
+# Geography Dashboard Backend
 
 **FastAPI-based Geospatial Analytics & AI Insight Backend**
 
-This repository contains the backend system for **GeoDashboard**, a full-stack geospatial analytics platform focused on spatial analysis, system design, and responsible AI integration.
+This repository contains the backend system for **Geography Dashboard**, a full-stack geospatial analytics platform focused on spatial analysis, system design, and responsible AI integration.
 
 The backend handles authentication, dataset ingestion, geospatial analytics, and AI-assisted analytical insights in a production-style environment.
 
@@ -40,16 +40,16 @@ The former AWS deployment remains available via app.ai_main:app. Only set AI_MOD
 
 ## Deployment notes
 
-The public core API is deployed separately from the Vercel frontend and uses Neon PostgreSQL. Local Kubernetes manifests, Prometheus/Grafana resources, and Terraform registry bootstrap configuration are maintained in the main [GeoDashboard repository](https://github.com/heimweh17/Geo-Dashboard/tree/main/infra).
+The public core API is deployed separately from the Vercel frontend and uses Neon PostgreSQL. Local Kubernetes manifests, Prometheus/Grafana resources, and Terraform registry bootstrap configuration are maintained in the main [Geography Dashboard repository](https://github.com/heimweh17/Geography-Dashboard/tree/main/infra).
 
 ---
 
 ## Main Project
 
-This backend powers the full GeoDashboard platform.
+This backend powers the full Geography Dashboard platform.
 
 🔗 **Main Repository:**  
-https://github.com/heimweh17/Geo-Dashboard
+https://github.com/heimweh17/Geography-Dashboard
 
 🔗 **Live Demo:**  
 https://thegeodashboard.vercel.app/

@@ -17,7 +17,7 @@ OVERPASS_ENDPOINTS = (
     "https://overpass.private.coffee/api/interpreter",
 )
 REQUEST_HEADERS = {
-    "User-Agent": "GeoInsightDashboard/1.0 (+https://thegeodashboard.vercel.app)",
+    "User-Agent": "GeographyDashboard/1.0 (+https://thegeodashboard.vercel.app)",
     "Accept": "application/json",
 }
 ALLOWED_AMENITIES = {

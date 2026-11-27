@@ -8,7 +8,7 @@ from starlette.responses import Response
 
 HTTP_REQUESTS_TOTAL = Counter(
     "geodashboard_http_requests_total",
-    "HTTP requests handled by GeoDashboard services.",
+    "HTTP requests handled by Geography Dashboard services.",
     ("service", "method", "route", "status_code"),
 )
 HTTP_REQUEST_DURATION_SECONDS = Histogram(
